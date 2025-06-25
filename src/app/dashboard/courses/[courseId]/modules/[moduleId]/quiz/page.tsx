@@ -3,18 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, Timestamp, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course, CourseModule } from '@/lib/firestore-schema';
 import Link from 'next/link';
 import { 
-  fetchYouTubeTranscript, 
-  extractYouTubeId,
-  generateAndStoreQuizFromVideo,
-  storeQuizResult,
-  saveQuizAttempt
-} from '@/lib/firestore';
-import { QuizQuestion, getAnswerExplanations, Explanation } from '@/lib/ai-service';
+  generateQuizFromVideoUrl,
+  QuizQuestion, 
+  getAnswerExplanations, 
+  Explanation 
+} from '@/lib/ai-service';
 import { QuizAttempt } from '@/lib/firestore-schema';
 
 const QuizPage = () => {
@@ -110,18 +108,30 @@ const QuizPage = () => {
     setError(null);
     
     try {
-      // Generate and store quiz directly from video URL
-      const generatedQuestions = await generateAndStoreQuizFromVideo(
-        courseId as string,
-        moduleId as string,
-        module.videoUrl,
-        module.title
-      );
+      // Generate quiz from video URL using the AI service
+      const generatedQuiz = await generateQuizFromVideoUrl(module.videoUrl, module.title);
       
-      setQuestions(generatedQuestions);
-      // Initialize selected options array
-      setSelectedOptions(new Array(generatedQuestions.length).fill(-1));
-      console.log('Quiz generated successfully with', generatedQuestions.length, 'questions');
+      if (generatedQuiz.questions.length > 0) {
+        // Update the module in Firestore with the new questions
+        const courseRef = doc(db, 'courses', courseId as string);
+        const courseSnap = await getDoc(courseRef);
+        if (courseSnap.exists()) {
+          const courseData = courseSnap.data() as Course;
+          const moduleIndex = courseData.modules.findIndex(m => m.id === moduleId);
+          
+          if (moduleIndex !== -1) {
+            const updatedModules = [...courseData.modules];
+            updatedModules[moduleIndex].quiz = { questions: generatedQuiz.questions };
+            await updateDoc(courseRef, { modules: updatedModules });
+          }
+        }
+        
+        setQuestions(generatedQuiz.questions);
+        setSelectedOptions(new Array(generatedQuiz.questions.length).fill(-1));
+        console.log('Quiz generated and stored successfully with', generatedQuiz.questions.length, 'questions');
+      } else {
+        setError('The AI failed to generate a quiz for this video.');
+      }
     } catch (error) {
       console.error('Error generating quiz:', error);
       setError('Failed to generate quiz. Please try again later.');
@@ -162,6 +172,37 @@ const QuizPage = () => {
     return Math.round((correctCount / questions.length) * 100);
   };
 
+  const saveQuizProgress = async (userId: string, finalScore: number, isPassed: boolean, attempt: QuizAttempt) => {
+    const userProgressRef = doc(db, 'user-progress', `${userId}_${courseId}`);
+    
+    try {
+      await updateDoc(userProgressRef, {
+        [`moduleScores.${moduleId}`]: finalScore,
+        [`quizAttempts.${moduleId}`]: arrayUnion(attempt),
+        ...(isPassed && { completedModules: arrayUnion(moduleId) }),
+        lastAccessedAt: new Date(),
+      });
+      console.log('Quiz progress saved successfully');
+    } catch (error: any) {
+      if (error.code === 'not-found') {
+        // Document doesn't exist, create it
+        await setDoc(userProgressRef, {
+          userId,
+          courseId,
+          enrolledAt: new Date(),
+          lastAccessedAt: new Date(),
+          completedModules: isPassed ? [moduleId] : [],
+          moduleScores: { [moduleId as string]: finalScore },
+          quizAttempts: { [moduleId as string]: [attempt] },
+        });
+        console.log('New user progress document created and quiz progress saved');
+      } else {
+        console.error("Error saving quiz progress: ", error);
+        throw error;
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     // Calculate score
     const finalScore = calculateScore();
@@ -179,9 +220,8 @@ const QuizPage = () => {
         const userId = getAuthenticatedUserId();
         
         if (userId) {
-          const isPassed = finalScore >= 70; // Pass threshold
+          const isPassed = finalScore >= (module?.quiz?.passingScore || 70);
           
-          // Create quiz attempt object
           const quizAttempt: QuizAttempt = {
             attemptedAt: new Date(),
             score: finalScore,
@@ -193,21 +233,7 @@ const QuizPage = () => {
             attemptNumber: retryCount + 1
           };
 
-          // Store both the quiz result and attempt
-          await Promise.all([
-            storeQuizResult(
-              userId,
-              courseId as string,
-              moduleId as string,
-              finalScore,
-              isPassed
-            ),
-            saveQuizAttempt(
-              `${userId}_${courseId}`,
-              moduleId,
-              quizAttempt
-            )
-          ]);
+          await saveQuizProgress(userId, finalScore, isPassed, quizAttempt);
         } else {
           console.error('No user ID available for storing quiz result');
         }
