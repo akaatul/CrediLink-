@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { doc, collection, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Course, CourseModule, FinalTest } from '@/lib/firestore-schema';
-import { getAI, getGenerativeModel, GoogleGenerativeAI } from '@/lib/ai-service';
+import { initializeAI, generateQuizFromVideoUrl } from '@/lib/ai-service';
 
 interface ModuleFormData {
   title: string;
