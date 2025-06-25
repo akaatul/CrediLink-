@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCourse, updateCourse } from '@/lib/firestore';
-import { Course, CourseModule } from '@/lib/firestore-schema';
+import { Course, CourseModule, Quiz } from '@/lib/firestore-schema';
 import Link from 'next/link';
 
 interface ModuleFormData {
@@ -12,6 +12,8 @@ interface ModuleFormData {
   title: string;
   description: string;
   videoUrl: string;
+  duration: number;
+  quiz: Quiz;
 }
 
 const EditCoursePage = () => {
@@ -64,7 +66,7 @@ const EditCoursePage = () => {
   };
 
   const addModule = () => {
-    setModules([...modules, { id: `new-module-${Date.now()}`, title: '', description: '', videoUrl: '' }]);
+    setModules([...modules, { id: `new-module-${Date.now()}`, title: '', description: '', videoUrl: '', duration: 0, quiz: { questions: [] } }]);
   };
 
   const removeModule = (index: number) => {
@@ -82,7 +84,15 @@ const EditCoursePage = () => {
     try {
       const updatedData: Partial<Course> = {
         ...courseData,
-        modules: modules.map((m, index) => ({ ...m, order: index })),
+        modules: modules.map((m, index) => ({
+          id: m.id || `module-${index}`,
+          title: m.title,
+          description: m.description,
+          videoUrl: m.videoUrl,
+          duration: m.duration,
+          order: index,
+          quiz: m.quiz,
+        })),
       };
       await updateCourse(courseId, updatedData);
       router.push('/dashboard/admin');
