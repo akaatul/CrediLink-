@@ -9,21 +9,21 @@ function fixEnvDirect() {
   try {
     // Define the corrected content
     const content = `# Firebase Configuration
-NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyAyc-bX7duDuUwEqKK5UHMsihm9r4UMwhc"
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="credilink-51afa.firebaseapp.com"
-NEXT_PUBLIC_FIREBASE_PROJECT_ID="credilink-51afa"
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="credilink-51afa.firebasestorage.app"
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="20360001159"
-NEXT_PUBLIC_FIREBASE_APP_ID="1:20360001159:web:750ae1140ab639e4576a22"
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-0DG9KE9DCV"
+NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-api-key"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-firebase-auth-domain"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-firebase-project-id"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-firebase-storage-bucket"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="your-firebase-messaging-sender-id"
+NEXT_PUBLIC_FIREBASE_APP_ID="your-firebase-app-id"
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="your-firebase-measurement-id"
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-nextauth-secret-key
 
 # OAuth Providers
-GOOGLE_CLIENT_ID="20360001159-pertpgt4idrh1i636ruupug9kl843tos.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="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"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
