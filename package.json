@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "npm install --legacy-peer-deps && npm run build",
     "migrate-certificates": "node -r dotenv/config migrate-certificates.js"
   },
   "dependencies": {
@@ -15,7 +14,7 @@
     "@next-auth/firebase-adapter": "^2.0.1",
     "ethers": "^5.7.2",
     "firebase": "^11.9.1",
-    "firebase-admin": "^13.4.0",
+    "firebase-admin": "^11.11.1",
     "framer-motion": "^10.16.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
