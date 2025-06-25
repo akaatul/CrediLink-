@@ -460,7 +460,7 @@ const ModulePage = () => {
                 </Link>
               )}
               
-              {module.hasQuiz && (
+              {module.quiz && module.quiz.questions && module.quiz.questions.length > 0 && (
                 <button 
                   onClick={handleStartQuiz}
                   className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700"
