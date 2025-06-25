@@ -56,7 +56,7 @@ const SignupPage = () => {
     
     try {
       const fullName = `${formData.firstName} ${formData.lastName}`;
-      await signup(formData.email, formData.password, fullName, userType);
+      await signup(formData.email, formData.password, fullName);
       // Redirect happens in the auth context
     } catch (err: any) {
       setSignupError(err.message || 'Signup failed');
